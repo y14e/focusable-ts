@@ -133,7 +133,7 @@ function isDisabledDeep(element: Element) {
     }
 
     if (isFormControl(element) && current.tagName === 'FIELDSET' && current.hasAttribute('disabled')) {
-      const firstLegend = [...current.children].find((child) => child.tagName === 'LEGEND');
+      const firstLegend = current.querySelector(':scope > legend:first-of-type');
 
       if (firstLegend?.contains(element)) {
         continue;
