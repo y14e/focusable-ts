@@ -22,7 +22,7 @@ export function getNextFocusable(
     return null;
   }
 
-  return getRelativeFocusable(container, 1, { ...options });
+  return getRelativeFocusable(container, 1, options);
 }
 
 export function getPreviousFocusable(
@@ -33,7 +33,7 @@ export function getPreviousFocusable(
     return null;
   }
 
-  return getRelativeFocusable(container, -1, { ...options });
+  return getRelativeFocusable(container, -1, options);
 }
 
 export function hasFocusable(container: HTMLElement = document.body): boolean {
@@ -114,7 +114,7 @@ function isDisabledDeep(element: Element) {
   for (
     let current: Node | null = element.parentNode;
     current;
-    current = !(current instanceof ShadowRoot) ? current.parentNode : current.host
+    current = !(current instanceof ShadowRoot) ? current.parentNode : current.mode === 'open' ? current.host : null
   ) {
     if (current instanceof Element && current.matches('[inert]')) {
       return true;
