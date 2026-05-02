@@ -111,6 +111,10 @@ function getRelativeFocusable(container: HTMLElement, offset: number = 0, option
 }
 
 function isDisabledDeep(element: Element) {
+  const isFormControl = (element: Element) => {
+    return /^(BUTTON|INPUT|SELECT|TEXTAREA)$/.test(element.tagName);
+  };
+
   for (
     let current: Node | null = element;
     current;
@@ -133,8 +137,4 @@ function isDisabledDeep(element: Element) {
   }
 
   return false;
-}
-
-function isFormControl(element: Element) {
-  return /^(BUTTON|INPUT|SELECT|TEXTAREA)$/.test(element.tagName);
 }
