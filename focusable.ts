@@ -57,6 +57,10 @@ export function isFocusable(element: HTMLElement): boolean {
 }
 
 function containsDeep(container: Node, node: Node) {
+  if (!container || !node) {
+    return false;
+  }
+
   for (
     let current: Node | null = node;
     current;
@@ -81,6 +85,10 @@ function getActiveElement() {
 }
 
 function getRelativeFocusable(container: HTMLElement, offset: number = 0, options: FocusableOptions = {}) {
+  if (!container) {
+    return null;
+  }
+
   const focusables = getFocusables(container);
   const { length } = focusables;
 
@@ -111,6 +119,10 @@ function getRelativeFocusable(container: HTMLElement, offset: number = 0, option
 }
 
 function isDisabledDeep(element: Element) {
+  if (!element) {
+    return false;
+  }
+
   const isFormControl = (element: Element) => {
     return /^(BUTTON|INPUT|SELECT|TEXTAREA)$/.test(element.tagName);
   };
