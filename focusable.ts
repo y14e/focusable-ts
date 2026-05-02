@@ -7,7 +7,7 @@ const FOCUSABLE_SELECTOR =
   ':is(a[href], area[href], button, embed, iframe, input:not([type="hidden" i]), object, select, details > summary:first-of-type, textarea, [contenteditable]:not([contenteditable="false" i]), [controls], [tabindex]):not(:disabled, [hidden], [inert], [tabindex="-1"])';
 
 export function getFocusables(container: HTMLElement = document.body): HTMLElement[] {
-  if (!container) {
+  if (!(container instanceof HTMLElement)) {
     return [];
   }
 
@@ -18,7 +18,7 @@ export function getNextFocusable(
   container: HTMLElement = document.body,
   options: FocusableOptions = {},
 ): HTMLElement | null {
-  if (!container) {
+  if (!(container instanceof HTMLElement)) {
     return null;
   }
 
@@ -29,7 +29,7 @@ export function getPreviousFocusable(
   container: HTMLElement = document.body,
   options: FocusableOptions = {},
 ): HTMLElement | null {
-  if (!container) {
+  if (!(container instanceof HTMLElement)) {
     return null;
   }
 
@@ -37,7 +37,7 @@ export function getPreviousFocusable(
 }
 
 export function hasFocusable(container: HTMLElement = document.body): boolean {
-  if (!container) {
+  if (!(container instanceof HTMLElement)) {
     return false;
   }
 
@@ -45,7 +45,7 @@ export function hasFocusable(container: HTMLElement = document.body): boolean {
 }
 
 export function isFocusable(element: HTMLElement): boolean {
-  if (!element) {
+  if (!(element instanceof HTMLElement)) {
     return false;
   }
 
@@ -57,10 +57,6 @@ export function isFocusable(element: HTMLElement): boolean {
 }
 
 function containsDeep(container: Node, node: Node) {
-  if (!container || !node) {
-    return false;
-  }
-
   for (
     let current: Node | null = node;
     current;
@@ -85,10 +81,6 @@ function getActiveElement() {
 }
 
 function getRelativeFocusable(container: HTMLElement, offset: number = 0, options: FocusableOptions = {}) {
-  if (!container) {
-    return null;
-  }
-
   const focusables = getFocusables(container);
   const { length } = focusables;
 
@@ -119,10 +111,6 @@ function getRelativeFocusable(container: HTMLElement, offset: number = 0, option
 }
 
 function isDisabledDeep(element: Element) {
-  if (!element) {
-    return false;
-  }
-
   const isFormControl = (element: Element) => {
     return /^(BUTTON|INPUT|SELECT|TEXTAREA)$/.test(element.tagName);
   };
