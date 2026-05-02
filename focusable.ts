@@ -81,7 +81,6 @@ function getActiveElement() {
 }
 
 function getRelativeFocusable(container: HTMLElement, offset: number = 0, options: FocusableOptions = {}) {
-  const { active, wrap = false } = options;
   const focusables = getFocusables(container);
   const { length } = focusables;
 
@@ -89,6 +88,7 @@ function getRelativeFocusable(container: HTMLElement, offset: number = 0, option
     return null;
   }
 
+  const { active, wrap = false } = options;
   const current = active ?? getActiveElement();
 
   if (!current || !containsDeep(container, current)) {
