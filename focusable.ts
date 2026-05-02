@@ -3,8 +3,7 @@ export interface FocusableOptions {
   readonly wrap?: boolean;
 }
 
-const FOCUSABLE_SELECTOR =
-  ':is(a[href], area[href], button, embed, iframe, input:not([type="hidden" i]), object, select, details > summary:first-of-type, textarea, [contenteditable]:not([contenteditable="false" i]), [controls], [tabindex]):not(:disabled, [hidden], [inert], [tabindex="-1"])';
+const FOCUSABLE_SELECTOR = `:is(a[href], area[href], button, embed, iframe, input:not([type="hidden" i]), object, select, details > summary:first-of-type, textarea, [contenteditable]:not([contenteditable="false" i]), [controls], [tabindex]):not(:disabled, [hidden], [inert], [tabindex="-1"])`;
 
 export function getFocusables(container: HTMLElement = document.body): HTMLElement[] {
   if (!(container instanceof HTMLElement)) {
@@ -111,6 +110,10 @@ function getRelativeFocusable(container: HTMLElement, offset: number = 0, option
 }
 
 function isDisabledDeep(element: Element) {
+  const isDisabled = (element: Element) => {
+    return 'disabled' in element && element.disabled;
+  };
+
   const isFormControl = (element: Element) => {
     return /^(BUTTON|INPUT|SELECT|TEXTAREA)$/.test(element.tagName);
   };
@@ -124,18 +127,19 @@ function isDisabledDeep(element: Element) {
       continue;
     }
 
-    if (current === element && isFormControl(current) && current.hasAttribute('disabled')) {
+    // [disabled]
+    if (current === element && isFormControl(current) && isDisabled(current)) {
       return true;
     }
 
+    // [inert]
     if (current.matches('[inert]')) {
       return true;
     }
 
-    if (isFormControl(element) && current.tagName === 'FIELDSET' && current.hasAttribute('disabled')) {
-      const firstLegend = current.querySelector(':scope > legend:first-of-type');
-
-      if (firstLegend?.contains(element)) {
+    // fieldset[disabled]
+    if (isFormControl(element) && current.tagName === 'FIELDSET' && isDisabled(current)) {
+      if (current.querySelector(':scope > legend:first-of-type')?.contains(element)) {
         continue;
       }
 
