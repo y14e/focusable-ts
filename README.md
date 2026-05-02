@@ -2,9 +2,6 @@
 
 TS snippet for detecting and getting focusable element(s).
 
-> [!NOTE]
-> The `<fieldset>` element has some tricky specs, so we need to refactor the logic around it.
-
 ## Usage
 
 ```ts
