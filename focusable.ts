@@ -124,14 +124,21 @@ function isDisabledDeep(element: Element) {
       continue;
     }
 
-    if (
-      (current === element && isFormControl(current) && current.hasAttribute('disabled')) ||
-      current.matches('[inert]') ||
-      (isFormControl(element) &&
-        current.tagName === 'FIELDSET' &&
-        current.hasAttribute('disabled') &&
-        ![...current.children].find((child) => child.tagName === 'LEGEND')?.contains(element))
-    ) {
+    if (current === element && isFormControl(current) && current.hasAttribute('disabled')) {
+      return true;
+    }
+
+    if (current.matches('[inert]')) {
+      return true;
+    }
+
+    if (isFormControl(element) && current.tagName === 'FIELDSET' && current.hasAttribute('disabled')) {
+      const firstLegend = [...current.children].find((child) => child.tagName === 'LEGEND');
+
+      if (firstLegend?.contains(element)) {
+        continue;
+      }
+
       return true;
     }
   }
