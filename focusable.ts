@@ -112,14 +112,29 @@ function getRelativeFocusable(container: HTMLElement, offset: number = 0, option
 
 function isDisabledDeep(element: Element) {
   for (
-    let current: Node | null = element.parentNode;
+    let current: Node | null = element;
     current;
-    current = !(current instanceof ShadowRoot) ? current.parentNode : current.mode === 'open' ? current.host : null
+    current = current instanceof ShadowRoot ? (current.mode === 'open' ? current.host : null) : current.parentNode
   ) {
-    if (current instanceof Element && current.matches('[inert]')) {
+    if (!(current instanceof Element)) {
+      continue;
+    }
+
+    if (
+      (current === element && isFormControl(current) && current.hasAttribute('disabled')) ||
+      current.matches('[inert]') ||
+      (isFormControl(element) &&
+        current.tagName === 'FIELDSET' &&
+        current.hasAttribute('disabled') &&
+        ![...current.children].find((child) => child.tagName === 'LEGEND')?.contains(element))
+    ) {
       return true;
     }
   }
 
   return false;
+}
+
+function isFormControl(element: Element) {
+  return /^(BUTTON|INPUT|SELECT|TEXTAREA)$/.test(element.tagName);
 }
