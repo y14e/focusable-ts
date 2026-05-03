@@ -22,11 +22,12 @@ export interface FocusableOptions {
 // -----------------------------------------------------------------------------
 
 const FOCUSABLE_SELECTOR = `:is(a[href], area[href], button, embed, iframe, input:not([type="hidden" i]), object, select, details > summary:first-of-type, textarea, [contenteditable]:not([contenteditable="false" i]), [controls], [tabindex]):not(:disabled, [hidden], [inert], [tabindex="-1"])`;
-const cache: WeakMap<HTMLElement, number> = new WeakMap();
 
 // -----------------------------------------------------------------------------
 // [APIs]
 // -----------------------------------------------------------------------------
+
+const cache: WeakMap<HTMLElement, number> = new WeakMap();
 
 export function getFocusables(
   container: HTMLElement = document.body,
