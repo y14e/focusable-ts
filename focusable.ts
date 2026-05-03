@@ -46,29 +46,27 @@ export function getFocusables(
       }
     });
 
-  const getTabIndex = (element: HTMLElement) => {
-    const cached = cache.get(element);
-
-    if (cached !== undefined) {
-      return cached;
-    }
-
-    const number = Number(element.getAttribute('tabindex'));
-
-    cache.set(element, number);
-    return number;
-  };
-
   const sort = (elements: HTMLElement[]) => {
     const ordered: HTMLElement[] = [];
     const natural: HTMLElement[] = [];
+
+    const getTabIndex = (element: HTMLElement) => {
+      const cached = cache.get(element);
+
+      if (cached !== undefined) {
+        return cached;
+      }
+
+      const number = Number(element.getAttribute('tabindex'));
+      cache.set(element, number);
+      return number;
+    };
 
     elements.forEach((element) => {
       (getTabIndex(element) > 0 ? ordered : natural).push(element);
     });
 
     ordered.sort((a, b) => getTabIndex(a) - getTabIndex(b));
-
     return ordered.concat(natural);
   };
 
