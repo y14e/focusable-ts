@@ -1,7 +1,7 @@
 /**
  * focusable.ts
  *
- * @version 1.0.0
+ * @version 1.0.1
  * @author Yusuke Kamiyamane
  * @license MIT
  * @copyright Copyright (c) 2026 Yusuke Kamiyamane
@@ -53,8 +53,7 @@ export function getFocusables(
       return cached;
     }
 
-    const string = element.getAttribute('tabindex');
-    const number = string !== null ? Number(string) : 0;
+    const number = Number(element.getAttribute('tabindex'));
 
     cache.set(element, number);
     return number;
