@@ -1,16 +1,78 @@
+/**
+ * focusable.ts
+ *
+ * @version 1.0.0
+ * @author Yusuke Kamiyamane
+ * @license MIT
+ * @copyright Copyright (c) 2026 Yusuke Kamiyamane
+ * @see {@link https://github.com/y14e/focusable}
+ */
+
+// -----------------------------------------------------------------------------
+// [Types]
+// -----------------------------------------------------------------------------
+
 export interface FocusableOptions {
   readonly active?: HTMLElement | null;
   readonly wrap?: boolean;
 }
 
-const FOCUSABLE_SELECTOR = `:is(a[href], area[href], button, embed, iframe, input:not([type="hidden" i]), object, select, details > summary:first-of-type, textarea, [contenteditable]:not([contenteditable="false" i]), [controls], [tabindex]):not(:disabled, [hidden], [inert], [tabindex="-1"])`;
+// -----------------------------------------------------------------------------
+// [Constants]
+// -----------------------------------------------------------------------------
 
-export function getFocusables(container: HTMLElement = document.body): HTMLElement[] {
+const FOCUSABLE_SELECTOR = `:is(a[href], area[href], button, embed, iframe, input:not([type="hidden" i]), object, select, details > summary:first-of-type, textarea, [contenteditable]:not([contenteditable="false" i]), [controls], [tabindex]):not(:disabled, [hidden], [inert], [tabindex="-1"])`;
+const cache: WeakMap<HTMLElement, number> = new WeakMap();
+
+// -----------------------------------------------------------------------------
+// [APIs]
+// -----------------------------------------------------------------------------
+
+export function getFocusables(
+  container: HTMLElement = document.body,
+): HTMLElement[] {
   if (!(container instanceof HTMLElement)) {
     return [];
   }
 
-  return [...container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(isFocusable);
+  const elements: HTMLElement[] = [];
+
+  container
+    .querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+    .forEach((node) => {
+      if (isFocusable(node)) {
+        elements.push(node);
+      }
+    });
+
+  const getTabIndex = (element: HTMLElement) => {
+    const cached = cache.get(element);
+
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    const string = element.getAttribute('tabindex');
+    const number = string !== null ? Number(string) : 0;
+
+    cache.set(element, number);
+    return number;
+  };
+
+  const sort = (elements: HTMLElement[]) => {
+    const ordered: HTMLElement[] = [];
+    const natural: HTMLElement[] = [];
+
+    elements.forEach((element) => {
+      (getTabIndex(element) > 0 ? ordered : natural).push(element);
+    });
+
+    ordered.sort((a, b) => getTabIndex(a) - getTabIndex(b));
+
+    return ordered.concat(natural);
+  };
+
+  return sort(elements);
 }
 
 export function getNextFocusable(
@@ -48,38 +110,84 @@ export function isFocusable(element: HTMLElement): boolean {
     return false;
   }
 
+  const isDisabledDeep = (element: Element) => {
+    const isDisabled = (element: Element) => {
+      return 'disabled' in element && element.disabled;
+    };
+
+    const isFormControl = (element: Element) => {
+      return /^(BUTTON|INPUT|SELECT|TEXTAREA)$/.test(element.tagName);
+    };
+
+    for (
+      let current: Node | null = element;
+      current;
+      current =
+        current instanceof ShadowRoot
+          ? current.mode === 'open'
+            ? current.host
+            : null
+          : current.parentNode
+    ) {
+      if (!(current instanceof Element)) {
+        continue;
+      }
+
+      // [disabled]
+      if (
+        current === element &&
+        isFormControl(current) &&
+        isDisabled(current)
+      ) {
+        return true;
+      }
+
+      // [inert]
+      if (current.matches('[inert]')) {
+        return true;
+      }
+
+      // fieldset[disabled]
+      if (
+        isFormControl(element) &&
+        current.tagName === 'FIELDSET' &&
+        isDisabled(current)
+      ) {
+        if (
+          current
+            .querySelector(':scope > legend:first-of-type')
+            ?.contains(element)
+        ) {
+          continue;
+        }
+
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   return (
     element.matches(FOCUSABLE_SELECTOR) &&
     !isDisabledDeep(element) &&
-    element.checkVisibility({ contentVisibilityAuto: true, opacityProperty: true, visibilityProperty: true })
+    element.checkVisibility({
+      contentVisibilityAuto: true,
+      opacityProperty: true,
+      visibilityProperty: true,
+    })
   );
 }
 
-function containsDeep(container: Node, node: Node) {
-  for (
-    let current: Node | null = node;
-    current;
-    current = !(current instanceof ShadowRoot) ? current.parentNode : current.mode === 'open' ? current.host : null
-  ) {
-    if (current === container) {
-      return true;
-    }
-  }
+// -----------------------------------------------------------------------------
+// [Core]
+// -----------------------------------------------------------------------------
 
-  return false;
-}
-
-function getActiveElement() {
-  let active = document.activeElement;
-
-  while (active instanceof HTMLElement && active.shadowRoot?.activeElement) {
-    active = active.shadowRoot.activeElement;
-  }
-
-  return active instanceof HTMLElement ? active : null;
-}
-
-function getRelativeFocusable(container: HTMLElement, offset: number = 0, options: FocusableOptions = {}) {
+function getRelativeFocusable(
+  container: HTMLElement,
+  offset: number = 0,
+  options: FocusableOptions = {},
+) {
   const focusables = getFocusables(container);
   const { length } = focusables;
 
@@ -88,7 +196,36 @@ function getRelativeFocusable(container: HTMLElement, offset: number = 0, option
   }
 
   const { active, wrap = false } = options;
+
+  const getActiveElement = () => {
+    let active = document.activeElement;
+
+    while (active instanceof HTMLElement && active.shadowRoot?.activeElement) {
+      active = active.shadowRoot.activeElement;
+    }
+
+    return active instanceof HTMLElement ? active : null;
+  };
+
   const current = active ?? getActiveElement();
+
+  const containsDeep = (container: Node, node: Node) => {
+    for (
+      let current: Node | null = node;
+      current;
+      current = !(current instanceof ShadowRoot)
+        ? current.parentNode
+        : current.mode === 'open'
+          ? current.host
+          : null
+    ) {
+      if (current === container) {
+        return true;
+      }
+    }
+
+    return false;
+  };
 
   if (!current || !containsDeep(container, current)) {
     return null;
@@ -107,45 +244,4 @@ function getRelativeFocusable(container: HTMLElement, offset: number = 0, option
   }
 
   return focusables[(offsetIndex + length) % length] ?? null;
-}
-
-function isDisabledDeep(element: Element) {
-  const isDisabled = (element: Element) => {
-    return 'disabled' in element && element.disabled;
-  };
-
-  const isFormControl = (element: Element) => {
-    return /^(BUTTON|INPUT|SELECT|TEXTAREA)$/.test(element.tagName);
-  };
-
-  for (
-    let current: Node | null = element;
-    current;
-    current = current instanceof ShadowRoot ? (current.mode === 'open' ? current.host : null) : current.parentNode
-  ) {
-    if (!(current instanceof Element)) {
-      continue;
-    }
-
-    // [disabled]
-    if (current === element && isFormControl(current) && isDisabled(current)) {
-      return true;
-    }
-
-    // [inert]
-    if (current.matches('[inert]')) {
-      return true;
-    }
-
-    // fieldset[disabled]
-    if (isFormControl(element) && current.tagName === 'FIELDSET' && isDisabled(current)) {
-      if (current.querySelector(':scope > legend:first-of-type')?.contains(element)) {
-        continue;
-      }
-
-      return true;
-    }
-  }
-
-  return false;
 }
