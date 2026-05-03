@@ -5,7 +5,7 @@
  * @author Yusuke Kamiyamane
  * @license MIT
  * @copyright Copyright (c) 2026 Yusuke Kamiyamane
- * @see {@link https://github.com/y14e/focusable}
+ * @see {@link https://github.com/y14e/focusable-ts}
  */
 
 // -----------------------------------------------------------------------------
